@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Hello</title>
+	</head>
+	<body>
+		<p>Hello,WebServer</p>
+		<div>
+			<ul>
+				<li>创建一个ServerSocket对象；</li>
+				<li>调用ServerSocket对象的accept方法，等待连接，连接成功会返回一个Socket对象，否则一直阻塞等待；</li>
+				<li>从Socket对象中获取InputStream和OutputStream字节流，这两个流分别对应request请求和response响应；</li>
+				<li>处理请求：读取InputStream字节流信息，转成字符串形式，并解析，这里的解析比较简单，仅仅获取uri(统一资源标识符)信息;</li>
+				<li>处理响应：根据解析出来的uri信息，从WEB_ROOT目录中寻找请求的资源资源文件, 读取资源文件，并将其写入到OutputStream字节流中；</li>
+				<li>关闭Socket对象；</li>
+				<li>转到步骤2，继续等待连接请求；</li>
+			</ul>
+		</div>
+	</body>
+</html>
