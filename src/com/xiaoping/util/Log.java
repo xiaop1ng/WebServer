@@ -22,12 +22,11 @@ public class Log {
 	
 	/**
 	 * print with TAG
-	 * @param msg
+	 * @param i
 	 */
-	public static void i(String msg) {
+	public static void i(Object msg) {
 		if(isDebug) {
-			
-			System.out.println(TAG + sdf.format(new Date()) + " -> " +  msg);
+			System.out.println(TAG + sdf.format(new Date()) + " -> " +  (null!=msg ? msg.toString() : "NULL"));
 		}
 	}
 	
@@ -35,9 +34,9 @@ public class Log {
 	 * print without TAG
 	 * @param msg
 	 */
-	public static void m(String msg) {
+	public static void m(Object msg) {
 		if(isDebug) {
-			System.out.println(msg);
+			System.out.println(null!=msg ? msg.toString() : "NULL");
 		}
 	}
 	

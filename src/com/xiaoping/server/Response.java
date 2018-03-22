@@ -53,6 +53,15 @@ public class Response {
         this.output = output;
         
     }
+    
+    public void setStatus(int status) {
+    		this.status = status;
+    }
+    
+    public void setCharset(String charset) {
+		this.charset = charset;
+    }
+    
 
     public void setRequest(Request request) {
         this.request = request;
@@ -66,7 +75,7 @@ public class Response {
         	Log.i(request.getUri());
             File file = new File(Server.WEB_ROOT, request.getUri());
             
-            if (file.exists()) {
+            if ( file.exists() && file.isFile() ) {
                 fis = new FileInputStream(file);
                 int ch = fis.read(bytes, 0, BUFFER_SIZE);
                 String header = buildStaticFileHeader(file);
@@ -77,7 +86,8 @@ public class Response {
                 }
             } else {
                 // file not found
-                String errorMessage = "HTTP/1.1 404 File Not Found\r\n" + "Content-Type: text/html\r\n"
+            		this.status = 404;
+                String errorMessage = this.statusMap.get(this.status) + "Content-Type: text/html\r\n"
                         + "Content-Length: 23\r\n" + "\r\n" + "<h1>File Not Found</h1>";
                 output.write(errorMessage.getBytes());
             }
@@ -99,7 +109,7 @@ public class Response {
      */
     public String buildStaticFileHeader(File file) throws IOException {
     		Path path = Paths.get(file.getName());
-    		return 	"HTTP/1.1 200 OK\r\n" + 
+    		return 	this.statusMap.get(this.status) + 
     				"Content-Type: " + Files.probeContentType(path) + "\r\n" +
     				"Content-Length: " + file.length() + "\r\n" + 
     				"\r\n";

@@ -9,12 +9,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import com.xiaoping.util.Log;
+
 public class Server {
 	
 	//默认监听 80 端口
 	private int port = 80;
 	
-	private String host = "127.0.0.1";
+	private String host = "0.0.0.0";
 	
 	private ServerSocket serverSocket = null;
 	
@@ -51,13 +53,12 @@ public class Server {
 				is = socket.getInputStream();
 				os = socket.getOutputStream();
 				// 创建Request对象并解析
-                Request request = new Request(is);
-                request.parse();
-            
+                Request req = new Request(is);
+                Log.i(req.POST("username"));
                 // 创建 Response 对象
-                Response response = new Response(os);
-                response.setRequest(request);
-                response.sendStaticResource();
+                Response res = new Response(os);
+                res.setRequest(req);
+                res.sendStaticResource();
 
                 // 关闭 socket 对象
                 socket.close();
