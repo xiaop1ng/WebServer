@@ -1,12 +1,16 @@
 package com.xiaoping.server;
 
+import com.xiaoping.util.Log;
+
 public class App {
 	public static void main(String[] args) {
-		System.out.println("plz wait a sec...");
+		//Log.isDebug = false;
 		
-		WebServer server = WebServer.getInstance();
+		Log.i("plz wait a sec...");
 		
-		server.listen(3000);
+		Server server = Server.getInstance();
+		
+		server.listen(8080);
 
 	}
 }

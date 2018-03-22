@@ -3,6 +3,8 @@ package com.xiaoping.server;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.xiaoping.util.Log;
+
 public class Request {
 
     private InputStream input;
@@ -26,7 +28,7 @@ public class Request {
         for (int j = 0; j < i; j++) {
             request.append((char) buffer[j]);
         }
-        System.out.print(request.toString());
+        Log.i(request.toString());
         uri = parseUri(request.toString());
     }
 

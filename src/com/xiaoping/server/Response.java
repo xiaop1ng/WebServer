@@ -3,6 +3,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.xiaoping.util.Log;
+
 import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.File;
@@ -10,11 +15,43 @@ import java.io.File;
 public class Response {
 
     private static final int BUFFER_SIZE = 1024;
-    Request request;
-    OutputStream output;
+    private Request request;
+    private OutputStream output;
 
+    private static Map<Integer, String> statusMap = null;
+    // 默认响应状态 200 OK
+    private int status = 200;
+    
+    private String charset = "utf-8";
+    
+    private String contenType = "text/html";
+    
+    static {
+    	if(statusMap == null) {
+    		statusMap = new HashMap<>();
+    		statusMap.put(101, "HTTP/1.1 101 Switching Protocols\r\n");
+    		statusMap.put(200, "HTTP/1.1 200 OK\r\n");
+    		statusMap.put(201, "HTTP/1.1 201 Created\r\n");
+    		statusMap.put(202, "HTTP/1.1 202 Accepted\r\n");
+    		statusMap.put(204, "HTTP/1.1 204 No Content\r\n");
+    		statusMap.put(300, "HTTP/1.1 300 Multiple Choices\r\n");
+    		statusMap.put(301, "HTTP/1.1 301 Moved Permanently\r\n");
+    		statusMap.put(302, "HTTP/1.1 302 Moved Temporarily\r\n");
+    		statusMap.put(304, "HTTP/1.1 304 Not Modified\r\n");
+    		statusMap.put(400, "HTTP/1.1 400 Bad Request\r\n");
+    		statusMap.put(401, "HTTP/1.1 401 Unauthorized\r\n");
+    		statusMap.put(403, "HTTP/1.1 403 Forbidden\r\n");
+    		statusMap.put(504, "HTTP/1.1 404 Not Found\r\n");
+    		statusMap.put(500, "HTTP/1.1 500 Internal Server Error\r\n");
+    		statusMap.put(501, "HTTP/1.1 501 Not Implemented\r\n");
+    		statusMap.put(502, "HTTP/1.1 502 Bad Gateway\r\n");
+    		statusMap.put(503, "HTTP/1.1 503 Service Unavailable\r\n");
+    	}
+    }
+    
     public Response(OutputStream output) {
         this.output = output;
+        
     }
 
     public void setRequest(Request request) {
@@ -26,8 +63,8 @@ public class Response {
         FileInputStream fis = null;
         try {
             //将web文件写入到OutputStream字节流中
-        		System.out.println(request.getUri());
-            File file = new File(WebServer.WEB_ROOT, request.getUri());
+        	Log.i(request.getUri());
+            File file = new File(Server.WEB_ROOT, request.getUri());
             
             if (file.exists()) {
                 fis = new FileInputStream(file);
@@ -45,7 +82,7 @@ public class Response {
                 output.write(errorMessage.getBytes());
             }
         } catch (Exception e) {
-            // thrown if cannot instantiate a File object
+ 
             System.out.println(e.toString());
         } finally {
             if (fis != null)
