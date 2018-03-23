@@ -69,23 +69,23 @@ public class Request {
 		parseRequestHeader(request.toString());
 	}
 
-	// 从InputStream中读取request信息，并从request中获取uri值
+
 
 	/**
 	 * 解析请求头
 	 */
 	private void parseRequestHeader(String requestHead) {
-		int index1, index2;
-		index1 = requestHead.indexOf(' ');
-		if (index1 != -1) {
-			index2 = requestHead.indexOf(' ', index1 + 1);
-			if (index2 > index1) {
-				String reqString = requestHead.substring(index1 + 1, index2);
-				this.methon = requestHead.substring(0, index1);
+		int idx1, idx2;
+		idx1 = requestHead.indexOf(' ');
+		if (idx1 != -1) {
+			idx2 = requestHead.indexOf(' ', idx1 + 1);
+			if (idx2 > idx1) {
+				String reqString = requestHead.substring(idx1 + 1, idx2);
+				this.methon = requestHead.substring(0, idx1);
 				Log.m("req methon: ");
 				Log.m(this.methon);
 				
-				// reqString 中包含 "?" 则存在 query
+				// reqString 中包含 "?" 则存在 query 
 				if (reqString.indexOf("[?]") != -1) {
 					String[] reqStringArr = reqString.split("[?]");
 					this.searchString = reqStringArr.length > 1 ? reqStringArr[1] : null;
@@ -103,10 +103,12 @@ public class Request {
 					}
 					reqString = reqStringArr[0];
 				}
+				// 从InputStream中读取request信息，并从request中获取uri值
 				this.uri = reqString;
 				
 				// reqString 中包含 Content-Type: application/x-www-form-urlencoded 则存在 body
-				// 当然我们还得考虑 Conten-Type: application/json 等 POST 情况
+				// 当然我们还得考虑 Conten-Type: application/json 等 POST 情况 
+				// TODO: 补充其他类型的 POST请求
 				if (requestHead.indexOf("Content-Type: application/x-www-form-urlencoded") != -1) {
 					String[] bodyStringArr = requestHead.split("\r\n\r\n");
 					this.bodyString = bodyStringArr.length > 1 ? bodyStringArr[1] : null;
@@ -122,7 +124,7 @@ public class Request {
 							}
 						}
 					}
-				}
+				} 
 			}
 
 		}

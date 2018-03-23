@@ -14,6 +14,7 @@ import com.xiaoping.util.Log;
 public class Server {
 	
 	//默认监听 80 端口
+	// TODO: 这里的配置项应该写到配置文件里面去
 	private int port = 80;
 	
 	private String host = "0.0.0.0";
@@ -21,6 +22,8 @@ public class Server {
 	private ServerSocket serverSocket = null;
 	
 	public static final String WEB_ROOT = System.getProperty("user.dir") + File.separator + "webroot";
+	
+	public static final String WEB_INDEX = File.separator + "index.html";
 	
 	private Server() {};
 	
@@ -52,14 +55,15 @@ public class Server {
 				socket = serverSocket.accept();
 				is = socket.getInputStream();
 				os = socket.getOutputStream();
+				
 				// 创建Request对象并解析
                 Request req = new Request(is);
-                Log.i(req.POST("username"));
+
                 // 创建 Response 对象
                 Response res = new Response(os);
                 res.setRequest(req);
+                // TODO: 这里可以做一个 uri 匹配来匹配不一样的请求，交给不同 Action 来处理
                 res.sendStaticResource();
-
                 // 关闭 socket 对象
                 socket.close();
 			} catch (IOException e) {
