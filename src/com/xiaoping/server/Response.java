@@ -113,11 +113,13 @@ public class Response {
 		output.write(data);
     }
     
-    private void _send(String str) throws IOException {
+    private void send(String str) throws IOException {
     	send(str.getBytes());
     }
     
-    private void _send(File file) throws IOException {
+    
+    
+    private void send(File file) throws IOException {
     	byte[] bytes = new byte[BUFFER_SIZE];
     	FileInputStream fis = null;
     	if( file.exists() && file.isFile() ) {
@@ -135,7 +137,7 @@ public class Response {
     		setStatus(404);
     		String content = "<html><body><h1>File Not Found</h1></body></html>";
     		setContent(content);
-    		_send(content);
+    		send(content);
     	}
     }
     
@@ -147,7 +149,7 @@ public class Response {
     	}
         File file = new File(Server.WEB_ROOT, Uri);
 
-    	_send(file);
+    	send(file);
 
     }
     

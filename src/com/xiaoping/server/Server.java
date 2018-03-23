@@ -34,8 +34,8 @@ public class Server {
 	}
 	
 	public void listen() {
-		System.out.println("WebServer Start,Listen PORT: " + this.port);
-		System.out.println("WebServer webroot: " + WEB_ROOT);
+		Log.m("WebServer Start,Listen PORT: " + this.port);
+		Log.m("WebServer webroot: " + WEB_ROOT);
 		try {
 			serverSocket = new ServerSocket(this.port, 1, InetAddress.getByName(this.host));
 		} catch (UnknownHostException e) {
