@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.google.gson.Gson;
 import com.xiaoping.util.Log;
 
 import java.io.IOException;
@@ -117,7 +118,11 @@ public class Response {
     	send(str.getBytes());
     }
     
-    
+    private void send(Object obj) throws IOException {
+    	Gson gson = new Gson();
+    	setContenType("application/json");
+    	send(gson.toJson(obj));
+    }
     
     private void send(File file) throws IOException {
     	byte[] bytes = new byte[BUFFER_SIZE];
