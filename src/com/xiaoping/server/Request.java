@@ -11,16 +11,22 @@ public class Request {
 
 	private InputStream input;
 	
+	// 请求方法 GET|POST
 	private String methon;
 	
+	// 请求 URI 不包含 host 如：127.0.0.1/index.html?p=2 => /index.html
 	private String uri;
 
+	// 请求 ? 后面的部分 如：127.0.0.1/index.html?p=2 => p=2
 	private String searchString;
 
+	// query 部分的 K-V
 	private Map<String, String> queryMap;
 
+	// POST 请求的表单
 	private String bodyString;
 
+	// body 部分的 K-V
 	private Map<String, String> bodyMap;
 
 	public Request(InputStream input) {
