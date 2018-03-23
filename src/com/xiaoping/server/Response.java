@@ -1,10 +1,8 @@
 package com.xiaoping.server;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import com.google.gson.Gson;
@@ -90,7 +88,7 @@ public class Response {
     }
     
     private String getStatusString() {
-    	return this.statusMap.get(this.status) == null? this.statusMap.get(500) : this.statusMap.get(this.status);
+    		return Response.statusMap.get(this.status) == null? Response.statusMap.get(500) : Response.statusMap.get(this.status);
     }
     
     private String getStatusString(int status) {
@@ -114,17 +112,17 @@ public class Response {
 		output.write(data);
     }
     
-    private void send(String str) throws IOException {
+    public void send(String str) throws IOException {
     	send(str.getBytes());
     }
     
-    private void send(Object obj) throws IOException {
+    public void send(Object obj) throws IOException {
     	Gson gson = new Gson();
     	setContenType("application/json");
     	send(gson.toJson(obj));
     }
     
-    private void send(File file) throws IOException {
+    public void send(File file) throws IOException {
     	byte[] bytes = new byte[BUFFER_SIZE];
     	FileInputStream fis = null;
     	if( file.exists() && file.isFile() ) {

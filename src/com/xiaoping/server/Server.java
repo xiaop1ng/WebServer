@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.xiaoping.util.Log;
 
@@ -25,11 +28,16 @@ public class Server {
 	
 	public static final String WEB_INDEX = File.separator + "index.html";
 	
+	public static Map<String, Method> routerMap = new HashMap<String, Method>();
+	
+	private static App context;
+	
 	private Server() {};
 	
 	private static Server webServer = null;
 	
-	public static Server getInstance() {
+	public static Server getInstance(App context) {
+		Server.context = context;
 		return webServer==null?new Server():webServer;
 	}
 	
@@ -62,8 +70,18 @@ public class Server {
                 // 创建 Response 对象
                 Response res = new Response(os);
                 res.setRequest(req);
-                // TODO: 这里可以做一个 uri 匹配来匹配不一样的请求，交给不同 Action 来处理
-                res.sendStaticResource();
+                // uri 匹配来匹配不一样的请求，交给不同 Action 来处理
+                String uri = req.getUri();
+                Log.m(uri);
+                Method routerMethod = routerMap.get(uri);
+                if(null != routerMethod) {
+                		// 能匹配到相应的方法来处理该请求
+                		routerMethod.invoke(context, req, res);
+                }else {
+                		// 尝试返回静态资源
+                		res.sendStaticResource();
+                }
+                // TODO: 设置一个 Timeout 时长
                 // 关闭 socket 对象
                 socket.close();
 			} catch (Exception e) {
@@ -75,6 +93,15 @@ public class Server {
 	public void listen(int port) {
 		this.port = port;
 		this.listen();
+	}
+	
+	/**
+	 * 添加路由匹配规则
+	 * @param path
+	 * @param m
+	 */
+	public void use(String path, Method m) {
+		routerMap.put(path, m);
 	}
 	
 	/**

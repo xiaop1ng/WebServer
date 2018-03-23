@@ -86,7 +86,7 @@ public class Request {
 				Log.m(this.methon);
 				
 				// reqString 中包含 "?" 则存在 query 
-				if (reqString.indexOf("[?]") != -1) {
+				if (reqString.indexOf("?") != -1) {
 					String[] reqStringArr = reqString.split("[?]");
 					this.searchString = reqStringArr.length > 1 ? reqStringArr[1] : null;
 					Log.i(this.searchString);
