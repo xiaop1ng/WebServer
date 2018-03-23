@@ -141,7 +141,7 @@ public class Response {
     
     public void sendStaticResource() throws IOException {
     	Log.i(request.getUri());
-    	String Uri = request.getUri().trim();
+    	String Uri = request.getUri();
     	if(null == Uri || Uri.equals("/") || Uri.equals("")) {
     		Uri = Server.WEB_INDEX;
     	}

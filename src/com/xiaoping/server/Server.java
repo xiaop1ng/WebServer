@@ -66,8 +66,7 @@ public class Server {
                 res.sendStaticResource();
                 // 关闭 socket 对象
                 socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
 				continue;
 			}
 		}
