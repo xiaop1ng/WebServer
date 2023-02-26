@@ -6,12 +6,13 @@ import com.xiaoping.util.Log;
 
 public class App {
 	
-	public static void main(String[] args) throws NoSuchMethodException, SecurityException {
+	public static void main(String[] args) throws SecurityException {
 		//Log.isDebug = false;
 		Log.i("plz wait a sec...");
 		
-		Server server = Server.getInstance();
-		
+//		Server server = SockerServer.getInstance();
+		Server server = NIOServer.getInstance();
+
 		// use 方法需要在 listen 之前调用，否则不会生效
 		server.use("/user/login", App.class, "login");
 		server.use("/echo", App.class, "echo");

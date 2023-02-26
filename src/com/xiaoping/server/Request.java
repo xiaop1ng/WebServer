@@ -29,6 +29,11 @@ public class Request {
 	// body 部分的 K-V
 	private Map<String, String> bodyMap;
 
+	public Request(String request) {
+		Log.i(request);
+		parseRequestHeader(request.toString());
+	}
+
 	public Request(InputStream input) {
 		this.input = input;
 
