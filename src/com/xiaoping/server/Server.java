@@ -11,10 +11,13 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.xiaoping.util.Log;
 
 public class Server {
+
 	// TODO: 这里的配置项应该写到配置文件里面去
 	
 	// 默认监听 80 端口
@@ -23,7 +26,12 @@ public class Server {
 	private String host = "0.0.0.0";
 	
 	private ServerSocket serverSocket = null;
-	
+
+	// 线程池大小
+	private static final int THREAD_POLL_SIZE = 10;
+
+	private ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POLL_SIZE);
+
 	// 配置默认静态资源文件夹
 	public static final String WEB_ROOT = System.getProperty("user.dir") + File.separator + "public";
 	
@@ -58,35 +66,51 @@ public class Server {
 		}
 		
 		while(true) {
-			Socket socket = null;
-			InputStream is = null;
-			OutputStream os = null;
-			
 			try {
 				// 这里 serSocket 阻塞住，当有请求进来，会产生一个 socket 对象 
-				socket = serverSocket.accept();
-				is = socket.getInputStream();
-				os = socket.getOutputStream();
-				// 从 socket 中取出输入输出流，分别构建请求和响应对象
-                Request req = new Request(is);
-                Response res = new Response(os);
-                res.setRequest(req);
-                
-                // uri 匹配来匹配不一样的请求，交给不同 Action 来处理
-                String uri = req.getUri();
-                Log.m(uri);
-                Method routerMethod = routerMap.get(uri);
-                // 这里如果请求能和我们的路由匹配上，则不会返回静态资源
-                if(null != routerMethod) { // 能匹配到相应的方法来处理该请求
-                		routerMethod.invoke(ctxMap.get(uri).getDeclaredConstructor().newInstance(), req, res);
-                }else { // 尝试返回静态资源
-                		res.sendStaticResource();
-                }
-                // TODO: 设置一个 Timeout 时长
-                // 关闭 socket 对象
-                socket.close();
+				Socket socket = serverSocket.accept();
+				// 使用线程池处理
+				executorService.execute(()-> handler(socket));
 			} catch (Exception e) {
 				continue;
+			}
+		}
+	}
+
+	public void handler(Socket socket) {
+		Log.i("当前线程：" + Thread.currentThread().getName());
+		InputStream is = null;
+		OutputStream os = null;
+		try{
+			is = socket.getInputStream();
+			os = socket.getOutputStream();
+			// 从 socket 中取出输入输出流，分别构建请求和响应对象
+			Request req = new Request(is);
+			Response res = new Response(os);
+			res.setRequest(req);
+
+			// uri 匹配来匹配不一样的请求，交给不同 Action 来处理
+			String uri = req.getUri();
+			Log.m(uri);
+			Method routerMethod = routerMap.get(uri);
+			// 这里如果请求能和我们的路由匹配上，则不会返回静态资源
+			if(null != routerMethod) { // 能匹配到相应的方法来处理该请求
+				routerMethod.invoke(ctxMap.get(uri).getDeclaredConstructor().newInstance(), req, res);
+			}else { // 尝试返回静态资源
+				res.sendStaticResource();
+			}
+			// TODO: 设置一个 Timeout 时长
+
+		}catch (Exception e) {
+			Log.i(e.getMessage());
+		} finally {
+			// 关闭 socket 对象
+			try {
+				is.close();
+				os.close();
+				socket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
