@@ -28,7 +28,7 @@ public class Server {
 	private ServerSocket serverSocket = null;
 
 	// 线程池大小
-	private static final int THREAD_POLL_SIZE = 10;
+	private static final int THREAD_POLL_SIZE = 50;
 
 	private ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POLL_SIZE);
 
@@ -67,11 +67,17 @@ public class Server {
 		
 		while(true) {
 			try {
-				// 这里 serSocket 阻塞住，当有请求进来，会产生一个 socket 对象 
+				// 这里 serSocket 阻塞住，当有请求进来，会产生一个 socket 对象
+				/**
+				 * 这里使用阻塞 I/O 模型存在性能问题，20线程100并发发送2000次请求，不分请求会失败
+				 * BIO：通常会为每一个 Web 请求引入单独的线程，当出现高并发量的同时增加线程数，CPU 就需要忙着线程切换损耗性能，
+				 * 所以BIO不合适高吞吐量、高可伸缩的Web 服务器。
+				 */
 				Socket socket = serverSocket.accept();
 				// 使用线程池处理
 				executorService.execute(()-> handler(socket));
 			} catch (Exception e) {
+				Log.m("发生错误：" + e.getMessage());
 				continue;
 			}
 		}

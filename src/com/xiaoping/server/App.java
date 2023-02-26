@@ -14,9 +14,10 @@ public class App {
 		
 		// use 方法需要在 listen 之前调用，否则不会生效
 		server.use("/user/login", App.class, "login");
+		server.use("/echo", App.class, "echo");
 		
 		// 启动 server
-		server.listen(8080);
+		server.listen(80);
 
 	}
 	
@@ -38,6 +39,14 @@ public class App {
 			rs.setting("error", -1, "fail");
 			res.send(rs);
 		}
+	}
+
+	public void echo(Request req, Response res) throws IOException {
+		Log.m("function echo invoke.");
+		Result rs = new Result();
+		String word = req.GET("word").toString();
+		rs.msg = word;
+		res.send(rs);
 	}
 	
 	class Result {
