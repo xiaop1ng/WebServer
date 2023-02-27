@@ -94,9 +94,6 @@ public class NIOServer implements Server {
                         if (!key.isValid()) {
                             continue;
                         }
-
-                        // 使用线程池处理
-//                        executorService.execute(() -> handler(key));
                         handler(key);
                     } catch (Exception e) {
                         Log.m("发生错误：" + e.getMessage());
@@ -116,7 +113,6 @@ public class NIOServer implements Server {
     }
 
     public void handler(SelectionKey key) {
-        // 这里会一直进入
         try {
             // SelectedKey 处于Acceptable状态
             if (key.isAcceptable()) {
@@ -158,7 +154,6 @@ public class NIOServer implements Server {
                 // 从 SocketChannel读取到的数据将会放到这个 buffer 中
                 ByteBuffer output = (ByteBuffer) key.attachment();
 
-                Log.m("hasRemaining:" + output.hasRemaining());
                 String request = StandardCharsets.UTF_8.decode(output).toString();
                 output.flip();
                 Log.m(request);
@@ -180,7 +175,6 @@ public class NIOServer implements Server {
                 }
                 // 将以编写的数据从缓存中移除
                 output.compact();
-
             }
         } catch (Exception e) {
             key.cancel();
