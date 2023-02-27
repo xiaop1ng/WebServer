@@ -1,5 +1,6 @@
 package com.xiaoping.server;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import com.xiaoping.util.Log;
 
 import java.io.File;
@@ -13,7 +14,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -72,29 +73,39 @@ public class NIOServer implements Server {
             //设置为非阻塞
             serverSocketChannel.configureBlocking(false);
             //得到Selector对象
-            try (Selector selector = Selector.open()) {
-                //把ServerSocketChannel注册到selector，事件为OP_ACCEPT
-                serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-                //如果返回的>0，表示已经获取到关注的事件
-                while (selector.select() > 0) {
-                    Set<SelectionKey> selectionKeys = selector.selectedKeys();
-                    Iterator<SelectionKey> iterator = selectionKeys.iterator();
-                    while (iterator.hasNext()) {
-                        //获得到一个事件
-                        SelectionKey next = iterator.next();
-                        try {
-                            // 使用线程池处理
-                            executorService.execute(() -> handler(next));
-                        } catch (Exception e) {
-                            Log.m("发生错误：" + e.getMessage());
+            Selector selector = Selector.open();
+            //把ServerSocketChannel注册到selector，并说明让Selector关注的点，这里是关注建立连接这个事件
+            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+            while (true) {
+                try {
+                    selector.select();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                // 获取到 selector 里所有就绪的SelectedKey实例，每将一个channel注册到一个selector就会产生一个selectedKey
+                Set<SelectionKey> readyKeys = selector.selectedKeys();
+                Iterator<SelectionKey> iterator = readyKeys.iterator();
+                while (iterator.hasNext()) {
+                    //获得到一个事件
+                    SelectionKey key = iterator.next();
+                    iterator.remove();
+                    try {
+                        if (!key.isValid()) {
                             continue;
                         }
 
-//                        }
-                        iterator.remove();
+                        // 使用线程池处理
+//                        executorService.execute(() -> handler(key));
+                        handler(key);
+                    } catch (Exception e) {
+                        Log.m("发生错误：" + e.getMessage());
+                        continue;
                     }
+
                 }
             }
+
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(1);
@@ -104,54 +115,79 @@ public class NIOServer implements Server {
         }
     }
 
-
-    public void handleAccept(SelectionKey key) throws IOException {
-        SocketChannel socketChannel = ((ServerSocketChannel) key.channel()).accept();
-//        SocketChannel socketChannel = serverSocketChannel.accept();
-        socketChannel.configureBlocking(false);//设置非阻塞模式
-        socketChannel.register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(1024)); //buffer分配一个缓冲区 大小为1024
-    }
-
     public void handler(SelectionKey key) {
         // 这里会一直进入
-        Log.i("当前线程：" + Thread.currentThread().getName());
-
         try {
-            if (key.isAcceptable()) {//接受
-                handleAccept(key);
-
-            }
-            if (key.isReadable()) {//开始读
-                SocketChannel sc = (SocketChannel) key.channel();// SocketChannel 是一个连接到 TCP 网络套接字的通道
-                ByteBuffer buffer = (ByteBuffer) key.attachment();//从 SocketChannel读取到的数据将会放到这个 buffer中
-                buffer.clear();
-                try {
-                    if ((sc.read(buffer)) != -1) {
-                        buffer.flip();//flip方法将Buffer从写模式切换到读模式
-                        String request = Charset.forName("utf-8").newDecoder().decode(buffer).toString(); //将此 charset 中的字节解码成 Unicode 字符
-                        Log.m(request);
-                        Request req = new Request(request);
-                        Response res = new Response(sc);
-                        res.setRequest(req);
-                        // uri 匹配来匹配不一样的请求，交给不同 Action 来处理
-                        String uri = req.getUri();
-                        Log.m(uri);
-                        Method routerMethod = routerMap.get(uri);
-                        // 这里如果请求能和我们的路由匹配上，则不会返回静态资源
-                        if (null != routerMethod) { // 能匹配到相应的方法来处理该请求
-                            routerMethod.invoke(ctxMap.get(uri).getDeclaredConstructor().newInstance(), req, res);
-                        } else { // 尝试返回静态资源
-                            res.sendStaticResource();
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-//                    sc.close();
+            // SelectedKey 处于Acceptable状态
+            if (key.isAcceptable()) {
+                ServerSocketChannel server = (ServerSocketChannel)key.channel();
+                // 接受客户端的连接
+                SocketChannel client = server.accept();
+                if (client == null) {
+                    Log.i("No connection is available. Skipping selection key");
+                    return;
                 }
+                // 设置非阻塞模式
+                client.configureBlocking(false);
+                // 向selector注册socketchannel，主要关注读写，并传入一个ByteBuffer实例供读写缓存
+                client.register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+            }
+            // SelectedKey 处于可读的状态
+            else if (key.isReadable()) {
+                // SocketChannel 是一个连接到 TCP 网络套接字的通道
+                SocketChannel client = (SocketChannel) key.channel();
+                // 从 SocketChannel读取到的数据将会放到这个 buffer 中
+                ByteBuffer output = (ByteBuffer) key.attachment();
+
+                if(output == null) {
+                    key.attach(output);
+                    return;
+                }
+                // 循环将通道数据读入缓冲区
+                while(client.read(output)>0){
+
+                }
+                output.flip();
+                // 切换到写模式
+                key.interestOps(SelectionKey.OP_WRITE);
+            }
+            // SelectedKey 处于可写的状态
+            else if (key.isWritable()) {
+                // SocketChannel 是一个连接到 TCP 网络套接字的通道
+                SocketChannel client = (SocketChannel) key.channel();
+                // 从 SocketChannel读取到的数据将会放到这个 buffer 中
+                ByteBuffer output = (ByteBuffer) key.attachment();
+
+                Log.m("hasRemaining:" + output.hasRemaining());
+                String request = StandardCharsets.UTF_8.decode(output).toString();
+                output.flip();
+                Log.m(request);
+                if (null == request || "".equals(request)){
+                    throw new NullPointerException("req is null");
+                }
+                Request req = new Request(request);
+                Response res = new Response(client);
+                res.setRequest(req);
+                // uri 匹配来匹配不一样的请求，交给不同 Action 来处理
+                String uri = req.getUri();
+                Log.m("uri:"  + uri);
+                Method routerMethod = routerMap.get(uri);
+                // 这里如果请求能和我们的路由匹配上，则不会返回静态资源
+                if (null != routerMethod) { // 能匹配到相应的方法来处理该请求
+                    routerMethod.invoke(ctxMap.get(uri).getDeclaredConstructor().newInstance(), req, res);
+                } else { // 尝试返回静态资源
+                    res.sendStaticResource();
+                }
+                // 将以编写的数据从缓存中移除
+                output.compact();
+
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            key.cancel();
+            try {
+                key.channel().close();
+            } catch (IOException ex) {
+            }
         }
     }
 

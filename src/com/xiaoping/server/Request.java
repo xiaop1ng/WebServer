@@ -30,7 +30,7 @@ public class Request {
 	private Map<String, String> bodyMap;
 
 	public Request(String request) {
-		Log.i(request);
+		Log.m(request);
 		parseRequestHeader(request.toString());
 	}
 
@@ -76,7 +76,7 @@ public class Request {
 		// Connection: keep-alive
 		//
 		// username=Jack&passwd=000000
-		Log.i(request.toString());
+		Log.m(request.toString());
 		parseRequestHeader(request.toString());
 	}
 

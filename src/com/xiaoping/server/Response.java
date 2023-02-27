@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,7 +21,7 @@ public class Response {
     private static final int BUFFER_SIZE = 1024;
     private Request request;
     private OutputStream output;
-    private SocketChannel socketChannel;
+    private SocketChannel client;
     // 响应码与响应表头的 K-V
     private static Map<Integer, String> statusMap = null;
 
@@ -64,8 +65,8 @@ public class Response {
         this.headers = new HashMap<String, String>();
     }
 
-    public Response(SocketChannel socketChannel) {
-        this.socketChannel = socketChannel;
+    public Response(SocketChannel client) {
+        this.client = client;
         this.headers = new HashMap<String, String>();
     }
 
@@ -158,6 +159,19 @@ public class Response {
     }
 
     /**
+     * 合并byte[]数组 （不改变原数组）
+     * @param byte_1
+     * @param byte_2
+     * @return 合并后的数组
+     */
+    private byte[] byteMerger(byte[] byte_1, byte[] byte_2){
+        byte[] byte_3 = new byte[byte_1.length+byte_2.length];
+        System.arraycopy(byte_1, 0, byte_3, 0, byte_1.length);
+        System.arraycopy(byte_2, 0, byte_3, byte_1.length, byte_2.length);
+        return byte_3;
+    }
+
+    /**
      * 响应请求
      *
      * @param data
@@ -167,9 +181,12 @@ public class Response {
         if (output != null) {
             output.write(getResponseHeaderBytes());
             output.write(data);
-        } else if (socketChannel != null) {
-            socketChannel.write(ByteBuffer.wrap(getResponseHeaderBytes()));
-            socketChannel.write(ByteBuffer.wrap(data));
+        } else if (client != null) {
+//            byte[] response = byteMerger(getResponseHeaderBytes(), data);
+//            String res = new String(response);
+//            client.write(ByteBuffer.wrap(response));
+            client.write(ByteBuffer.wrap(getResponseHeaderBytes()));
+            client.write(ByteBuffer.wrap(data));
         }
 
     }
@@ -188,14 +205,22 @@ public class Response {
         byte[] bytes = new byte[BUFFER_SIZE];
         FileInputStream fis = null;
         if (file.exists() && file.isFile()) {
-            output.write(getResponseHeaderBytes());
-            fis = new FileInputStream(file);
-            int ch = fis.read(bytes, 0, BUFFER_SIZE);
-            while (ch != -1) {
-                output.write(bytes, 0, ch);
-                ch = fis.read(bytes, 0, BUFFER_SIZE);
+            if (output != null) {
+                output.write(getResponseHeaderBytes());
+                fis = new FileInputStream(file);
+                int ch = fis.read(bytes, 0, BUFFER_SIZE);
+                while (ch != -1) {
+                    if (output != null) {
+                        output.write(bytes, 0, ch);
+                    }
+                    ch = fis.read(bytes, 0, BUFFER_SIZE);
+                }
+                fis.close();
+            } else if (client != null) {
+                client.write(ByteBuffer.wrap(getResponseHeaderBytes()));
+                byte[] byteArr = Files.readAllBytes(file.getAbsoluteFile().toPath());
+                client.write(ByteBuffer.wrap(byteArr));
             }
-            fis.close();
         } else {
             // file 不存在或不是一个文件
             // TODO:这里也可以替换成一个文件
@@ -213,11 +238,12 @@ public class Response {
      */
     public void sendStaticResource() throws IOException {
         Log.i(request.getUri());
-        String Uri = request.getUri();
-        if (null == Uri || Uri.equals("/") || Uri.equals("")) {
-            Uri = SockerServer.WEB_INDEX;
+        String uri = request.getUri();
+        if (null == uri) return;
+        if (null == uri || uri.equals("/") || uri.equals("")) {
+            uri = SockerServer.WEB_INDEX;
         }
-        File file = new File(SockerServer.WEB_ROOT, Uri);
+        File file = new File(SockerServer.WEB_ROOT, uri);
 
         send(file);
 
