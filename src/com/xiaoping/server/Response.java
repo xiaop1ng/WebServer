@@ -20,7 +20,9 @@ public class Response {
 
     private static final int BUFFER_SIZE = 1024;
     private Request request;
+    // BIO
     private OutputStream output;
+    // NIO
     private SocketChannel client;
     // 响应码与响应表头的 K-V
     private static Map<Integer, String> statusMap = null;

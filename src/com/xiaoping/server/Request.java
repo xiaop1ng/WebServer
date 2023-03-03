@@ -9,6 +9,7 @@ import com.xiaoping.util.Log;
 
 public class Request {
 
+	// BIO
 	private InputStream input;
 	
 	// 请求方法 GET|POST
