@@ -56,10 +56,17 @@ public class NIOServer implements Server {
 
     ;
 
-    private static NIOServer server = null;
+    private static volatile NIOServer server = null;
 
-    public static synchronized NIOServer getInstance() {
-        return server == null ? new NIOServer() : server;
+    public static NIOServer getInstance() {
+        if (server == null) {
+            synchronized(NIOServer.class) {
+                if (server == null) {
+                    server = new NIOServer();
+                }
+            }
+        }
+        return server;
     }
 
     @Override
