@@ -52,8 +52,8 @@ public class App {
 
 	/**
 	 * 将注解形式的 action 注册到 web 容器中
-	 * @param packageName
-	 * @param server
+	 * @param packageName 包名
+	 * @param server web容器
 	 */
 	private static void scanActionsAndUse(String packageName, Server server) {
 		Set<Class<?>> clazzs = ClassUtil.scanPackageByAnnotation(packageName, Module.class);
