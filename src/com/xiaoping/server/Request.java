@@ -31,7 +31,6 @@ public class Request {
 	private Map<String, String> bodyMap;
 
 	public Request(String request) {
-		Log.m(request);
 		parseRequestHeader(request.toString());
 	}
 
@@ -77,7 +76,6 @@ public class Request {
 		// Connection: keep-alive
 		//
 		// username=Jack&passwd=000000
-		Log.m(request.toString());
 		parseRequestHeader(request.toString());
 	}
 
@@ -124,7 +122,6 @@ public class Request {
 				if (requestHead.indexOf("Content-Type: application/x-www-form-urlencoded") != -1) {
 					String[] bodyStringArr = requestHead.split("\r\n\r\n");
 					this.bodyString = bodyStringArr.length > 1 ? bodyStringArr[1] : null;
-					Log.i(this.bodyString);
 					if (null != this.bodyString) {
 						this.bodyMap = new HashMap<String, String>();
 						String[] postArr = this.bodyString.split("&");

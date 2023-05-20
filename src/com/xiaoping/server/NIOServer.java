@@ -163,7 +163,6 @@ public class NIOServer implements Server {
 
                 String request = StandardCharsets.UTF_8.decode(output).toString();
                 output.flip();
-                Log.m(request);
                 if (null == request || "".equals(request)){
                     throw new NullPointerException("req is null");
                 }
